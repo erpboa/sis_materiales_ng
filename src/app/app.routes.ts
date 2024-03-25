@@ -78,6 +78,10 @@ export const appRoutes: Route[] = [
                 path: 'system',
                 children: [
                     {
+                        path: 'materiales',
+                        loadChildren: () => import('app/modules/admin/sis-materiales-ng/sis-materiales-ng.routes')
+                    },
+                    {
                         path: 'example',
                         loadChildren: () => import('app/modules/admin/example/example.routes')
                     }

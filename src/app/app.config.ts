@@ -1,7 +1,11 @@
 import { provideHttpClient } from '@angular/common/http';
 import { APP_INITIALIZER, ApplicationConfig, inject } from '@angular/core';
-import { LuxonDateAdapter } from '@angular/material-luxon-adapter';
-import { DateAdapter, MAT_DATE_FORMATS } from '@angular/material/core';
+import {
+    LuxonDateAdapter,
+    MAT_LUXON_DATE_ADAPTER_OPTIONS,
+    MAT_LUXON_DATE_FORMATS
+} from '@angular/material-luxon-adapter';
+import {DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE} from '@angular/material/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { PreloadAllModules, provideRouter, withInMemoryScrolling, withPreloading } from '@angular/router';
 import { provideBoby } from '@boby/boby.provider';
@@ -25,6 +29,19 @@ export const appConfig: ApplicationConfig = {
 
         // Material Date Adapter
         {
+            provide: DateAdapter,
+            useClass: LuxonDateAdapter,
+            deps: [MAT_DATE_LOCALE, MAT_LUXON_DATE_ADAPTER_OPTIONS],
+        },
+        {
+            provide: MAT_DATE_LOCALE,
+            useValue: 'es-bo'
+        },
+        {
+            provide: MAT_DATE_FORMATS,
+            useValue: MAT_LUXON_DATE_FORMATS
+        },
+        /*{
             provide : DateAdapter,
             useClass: LuxonDateAdapter,
         },
@@ -41,7 +58,7 @@ export const appConfig: ApplicationConfig = {
                     monthYearA11yLabel: 'LLLL yyyy',
                 },
             },
-        },
+        },*/
 
         // Transloco Config
         provideTransloco({
