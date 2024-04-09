@@ -26,8 +26,11 @@ import {MatTabsModule} from "@angular/material/tabs";
 import { TableModule } from 'primeng/table';
 import {ActivatedRoute, Router, RouterOutlet} from "@angular/router";
 import {MatDrawer, MatSidenavModule} from "@angular/material/sidenav";
-import {AgreeDialogComponent} from "../agree-dialog/agree-dialog.component";
+import {AgreeDialogComponent} from "./agree-dialog/agree-dialog.component";
 import {MatMenuModule} from "@angular/material/menu";
+import * as moment from "moment";
+import {RectifyDialogComponent} from "./rectify-dialog/rectify-dialog.component";
+import {BobyLoadingService} from "@boby/services/loading";
 
 @Component({
     selector: 'erp-incoming-list',
@@ -48,21 +51,22 @@ export class IncomingListComponent implements OnInit{
     public searchInputControl: UntypedFormControl = new UntypedFormControl();
     public incoming$: Observable<any []>;
 
-    private sort = 'nro_tramite';
-    private dir = 'asc';
+    private sort = 'nro_guia';
+    private dir = 'desc';
 
     public selectedItem: any = {};
 
-    public displayedColumns = [/*'nro_tramite','nro_po',*/'nro_guia','nro_parte_cot','descripcion_cot','tipo',/*'cantidad_det',*/'cantidad_recepcionada','accion'];
+    public displayedColumns = ['nro_guia','fecha_guia','nro_parte_cot','descripcion_cot','tipo','cantidad_recepcionada','accion'];
 
     public cols: any = [
         {header:'No Tramite',field:'nro_tramite',class:'bg-primary p-2 font-bold text-left min-w-44',width:'min-w-44'},
-        {header:'Tipo',field:'tipo',class:'bg-primary p-2 font-bold text-left min-w-36',width:'min-w-36'},
+        {header:'Fecha Guia',field:'fecha_guia',class:'bg-primary p-2 font-bold text-left min-w-28',width:'min-w-28'},
+        {header:'Tipo',field:'tipo',class:'bg-primary p-2 font-bold text-left min-w-28',width:'min-w-28'},
         {header:'No PO',field:'nro_po',class:'bg-primary p-2 font-bold text-left min-w-36',width:'min-w-36'},
-        {header:'Part Number',field:'nro_parte_cot',class:'bg-primary p-2 font-bold text-left min-w-72',width:'min-w-72'},
+        {header:'Part Number',field:'nro_parte_cot',class:'bg-primary p-2 font-bold text-left min-w-48',width:'min-w-48'},
         {header:'Desc. Cotización',field:'descripcion_cot',class:'bg-primary p-2 font-bold text-left min-w-96',width:'min-w-96'},
         {header:'Cant. Requerida',field:'cantidad_det',class:'bg-primary p-2 font-bold text-left min-w-72',width:'min-w-72'},
-        {header:'Cant. Recepcionada',field:'cantidad_recepcionada',class:'bg-primary p-2 font-bold text-left min-w-72',width:'min-w-72'},
+        {header:'Cant. Recepcionada',field:'cantidad_recepcionada',class:'bg-primary p-2 font-bold text-left min-w-44',width:'min-w-44'},
         {header:'Nro. Guia',field:'nro_guia',class:'bg-primary p-2 font-bold text-left min-w-44',width:'min-w-44'},
     ];
 
@@ -81,13 +85,16 @@ export class IncomingListComponent implements OnInit{
     private status:String = 'incoming';
 
     public drawerMode: 'side' | 'over';
+
+    public current_date: any = moment().format("YYYY-MM-DD");
     constructor(
         private _toolService: SisMaterialesNgService,
         private _changeDetectorRef: ChangeDetectorRef,
         private _matDialog: MatDialog,
         private _bobyConfirmationService: BobyConfirmationService,
         private _router: Router,
-        private _activatedRoute: ActivatedRoute
+        private _activatedRoute: ActivatedRoute,
+        private _loadService: BobyLoadingService,
     ) {
 
     }
@@ -100,15 +107,13 @@ export class IncomingListComponent implements OnInit{
      */
     ngOnInit(): void
     {
-        /*this.incoming$ = this._toolService.incoming$;
-        this._toolService.incoming$.subscribe((list)=>{
-            console.warn('Lista Incoming', list);
-        });*/
-
+        this._loadService.show();
         this._toolService.listIncoming(this.currentPage*this.pageSize,this.pageSize,this.sort,this.dir,this.query,this.status).subscribe(
             (list:any) => {
-                this.listIncoming = this.filteredIncoming = list;
-                this.totalRows = list[0]?.total ?? 0;
+                this._loadService.hide();
+                const djson = JSON.parse(list.datos[0].djson);
+                this.listIncoming = this.filteredIncoming = djson;
+                this.totalRows = list?.total ?? 0;
                 this._changeDetectorRef.markForCheck();
 
             }
@@ -130,16 +135,19 @@ export class IncomingListComponent implements OnInit{
     @HostListener('window:resize', ['$event'])
     onWindowResize() {
         this.getScreenWidth = window.innerWidth;
-        console.log(this.getScreenWidth);
+        //console.log(this.getScreenWidth);
     }
 
     pageChanged(event: PageEvent) {
         this.pageSize = event.pageSize;
         this.currentPage = event.pageIndex;
+        this._loadService.show();
         this._toolService.listIncoming(this.currentPage*this.pageSize,this.pageSize,this.sort,this.dir,this.query,this.status).subscribe(
             (list:any) => {
-                this.listIncoming = this.filteredIncoming = list;
-                this.totalRows = list[0]?.total ?? 0;
+                this._loadService.hide();
+                const djson = JSON.parse(list.datos[0].djson);
+                this.listIncoming = this.filteredIncoming = djson;
+                this.totalRows = list?.total ?? 0;
                 this._changeDetectorRef.markForCheck();
 
             }
@@ -178,18 +186,17 @@ export class IncomingListComponent implements OnInit{
     }
 
     redirect(row){
-
         this.selectedItem = row;
-        console.warn('this.selectedItem',this.selectedItem);
         this._router.navigate(['./', row.id_recepcion], {relativeTo: this._activatedRoute});
     }
 
-    execute(option, row){
+    execute(option, row, size){
         let id =  row.id_recepcion;
+        let type =  row.tipo;
         let dialogRef;
         switch (option) {
             case 'print_single':
-                this._toolService.printIncoming(id,row.tipo,0).subscribe((html)=>{
+                this._toolService.printIncoming(id,row.tipo,0,size).subscribe((html) => {
                     const popupWinindow = window.open('', '_blank', 'width=600,height=700,scrollbars=no,menubar=no,toolbar=no,location=no,status=no,titlebar=no');
                     popupWinindow.document.open();
                     popupWinindow.document.write(html);
@@ -197,7 +204,7 @@ export class IncomingListComponent implements OnInit{
                 });
                 break;
             case 'print_block':
-                this._toolService.printIncoming(id,row.tipo,row.cantidad_recepcionada).subscribe((html)=>{
+                this._toolService.printIncoming(id,row.tipo,row.cantidad_recepcionada, size).subscribe((html)=>{
                     const popupWinindow = window.open('', '_blank', 'width=600,height=700,scrollbars=no,menubar=no,toolbar=no,location=no,status=no,titlebar=no');
                     popupWinindow.document.open();
                     popupWinindow.document.write(html);
@@ -205,46 +212,13 @@ export class IncomingListComponent implements OnInit{
                 });
                 break;
             case 'agree':
-
-                /*// Open the confirmation dialog
-                 confirmation = this._bobyConfirmationService.open({
-                    title  : 'Alerta',
-                    message: 'Esta seguro de ACEPTAR la recepción? Esta acción no puede deshacerse!',
-                    actions: {
-                        confirm: {
-                            label: 'Aceptar',
-                        },
-                        cancel: {
-                            label: 'Cancelar',
-                        },
-                    },
-                });
-
-                // Subscribe to the confirmation dialog closed action
-                confirmation.afterClosed().subscribe((result) =>
-                {
-                    // If the confirm button pressed...
-                    if ( result === 'confirmed' )
-                    {
-                        this._toolService.agree(id).subscribe(
-                            (response)=>{
-                                this._toolService.listIncoming(this.currentPage*this.pageSize,this.pageSize,this.sort,this.dir,this.query,this.status).subscribe(
-                                    (list:any) => {
-                                        this.listIncoming = this.filteredIncoming = list;
-                                        this.totalRows = list[0]?.total ?? 0;
-                                        this._changeDetectorRef.markForCheck();
-                                    }
-                                );
-                            }
-                        );
-                    }
-                });*/
-
                 // Open the dialog
                 dialogRef = this._matDialog.open(AgreeDialogComponent,{
                     data:{
-                        id
-                    }
+                        id,
+                        type
+                    },
+                    disableClose: true
                 });
 
                 dialogRef.afterClosed()
@@ -252,12 +226,13 @@ export class IncomingListComponent implements OnInit{
                     {
                         this._toolService.listIncoming(this.currentPage*this.pageSize,this.pageSize,this.sort,this.dir,this.query,this.status).subscribe(
                             (list:any) => {
-                                this.listIncoming = this.filteredIncoming = list;
-                                this.totalRows = list[0]?.total ?? 0;
+                                const djson = JSON.parse(list.datos[0].djson);
+                                this.listIncoming = this.filteredIncoming = djson;
+                                this.totalRows = list?.total ?? 0;
                                 this._changeDetectorRef.markForCheck();
+                                this._router.navigate(['./'], {relativeTo: this._activatedRoute});
                             }
                         );
-                        console.warn('Compose dialog was closed!',result);
                     });
 
                 break;
@@ -266,7 +241,8 @@ export class IncomingListComponent implements OnInit{
                 dialogRef = this._matDialog.open(DeclineDialogComponent,{
                     data:{
                         id
-                    }
+                    },
+                    disableClose: true
                 });
 
                 dialogRef.afterClosed()
@@ -274,12 +250,13 @@ export class IncomingListComponent implements OnInit{
                     {
                         this._toolService.listIncoming(this.currentPage*this.pageSize,this.pageSize,this.sort,this.dir,this.query,this.status).subscribe(
                             (list:any) => {
-                                this.listIncoming = this.filteredIncoming = list;
-                                this.totalRows = list[0]?.total ?? 0;
+                                const djson = JSON.parse(list.datos[0].djson);
+                                this.listIncoming = this.filteredIncoming = djson;
+                                this.totalRows = list?.total ?? 0;
                                 this._changeDetectorRef.markForCheck();
+                                this._router.navigate(['./'], {relativeTo: this._activatedRoute});
                             }
                         );
-                        console.warn('Compose dialog was closed!',result);
                     });
                 break;
         }
@@ -287,10 +264,13 @@ export class IncomingListComponent implements OnInit{
     sortData(sort: Sort) {
         this.sort = sort.active;
         this.dir = sort.direction;
+        this._loadService.show();
         this._toolService.listIncoming(this.currentPage*this.pageSize,this.pageSize,this.sort,this.dir,this.query,this.status).subscribe(
             (list:any) => {
-                this.listIncoming = this.filteredIncoming = list;
-                this.totalRows = list[0]?.total ?? 0;
+                this._loadService.hide();
+                const djson = JSON.parse(list.datos[0].djson);
+                this.listIncoming = this.filteredIncoming = djson;
+                this.totalRows = list?.total ?? 0;
                 this._changeDetectorRef.markForCheck();
 
             }
@@ -309,6 +289,7 @@ export class IncomingListComponent implements OnInit{
     }
 
     selectedTabChange(tab){
+        this.currentPage = 0;
         switch (tab.index) {
             case 0:
                 this.status = 'incoming';
@@ -320,10 +301,13 @@ export class IncomingListComponent implements OnInit{
                 this.status = 'rechazado';
                 break;
         }
+        this._loadService.show();
         this._toolService.listIncoming(this.currentPage*this.pageSize,this.pageSize,this.sort,this.dir,this.query,this.status).subscribe(
             (list:any) => {
-                this.listIncoming = this.filteredIncoming = list;
-                this.totalRows = list[0]?.total ?? 0;
+                this._loadService.hide();
+                const djson = JSON.parse(list.datos[0].djson);
+                this.listIncoming = this.filteredIncoming = djson;
+                this.totalRows = list?.total ?? 0;
                 this._changeDetectorRef.markForCheck();
 
             }
@@ -331,12 +315,65 @@ export class IncomingListComponent implements OnInit{
     }
 
     reload(){
+        this._loadService.show();
         this._toolService.listIncoming(this.currentPage*this.pageSize,this.pageSize,this.sort,this.dir,this.query,this.status).subscribe(
             (list:any) => {
-                this.listIncoming = this.filteredIncoming = list;
-                this.totalRows = list[0]?.total ?? 0;
+                this._loadService.hide();
+                const djson = JSON.parse(list.datos[0].djson);
+                this.listIncoming = this.filteredIncoming = djson;
+                this.totalRows = list?.total ?? 0;
+                this._changeDetectorRef.markForCheck();
+                this._router.navigate(['./'], {relativeTo: this._activatedRoute});
+            }
+        );
+    }
+
+    /**
+     * Filter by search query
+     *
+     * @param query
+     */
+    filterByQuery(query: string): void
+    {
+        this._loadService.show();
+        this._toolService.listIncoming(this.currentPage*this.pageSize,this.pageSize,this.sort,this.dir,query,this.status).subscribe(
+            (list:any) => {
+                this._loadService.hide();
+                const djson = JSON.parse(list.datos[0].djson);
+                this.listIncoming = this.filteredIncoming = djson;
+                this.totalRows = list?.total ?? 0;
                 this._changeDetectorRef.markForCheck();
             }
         );
+
+    }
+
+    rectify(row){
+        let id =  row.id_recepcion;
+        // Open the dialog
+        let dialogRef = this._matDialog.open(RectifyDialogComponent,{
+            data:{
+                id
+            },
+            disableClose: true
+        });
+
+        dialogRef.afterClosed()
+            .subscribe((result) =>
+            {
+                this._toolService.listIncoming(this.currentPage*this.pageSize,this.pageSize,this.sort,this.dir,this.query,this.status).subscribe(
+                    (list:any) => {
+                        const djson = JSON.parse(list.datos[0].djson);
+                        this.listIncoming = this.filteredIncoming = djson;
+                        this.totalRows = list?.total ?? 0;
+                        this._changeDetectorRef.markForCheck();
+                        this._router.navigate(['./'], {relativeTo: this._activatedRoute});
+                    }
+                );
+            });
+    }
+
+    isEmpty(item){
+        return Object.entries(item).length === 0;
     }
 }

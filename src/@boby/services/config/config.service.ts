@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@angular/core';
 import { BOBY_CONFIG } from '@boby/services/config/config.constants';
 import { merge } from 'lodash-es';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, from, of } from 'rxjs';
+import { ApiErpService } from "../../../app/core/api-erp/api-erp.service";
+import {Scheme, Theme} from "./config.types";
+import {catchError, switchMap} from "rxjs/operators";
 
 @Injectable({providedIn: 'root'})
 export class BobyConfigService
@@ -11,7 +14,10 @@ export class BobyConfigService
     /**
      * Constructor
      */
-    constructor(@Inject(BOBY_CONFIG) config: any)
+    constructor(
+        @Inject(BOBY_CONFIG) config: any,
+        private _erpService: ApiErpService
+    )
     {
         // Private
         this._config = new BehaviorSubject(config);
@@ -50,5 +56,64 @@ export class BobyConfigService
     {
         // Set the config
         this._config.next(this.config);
+    }
+
+    /**
+     * Set the theme on the config
+     *
+     * @param theme
+     */
+    setTheme(theme: Theme):Observable<any>{
+        return from(this._erpService.post('gestion_materiales/TitemsRecepcion/agreeIncoming',{
+            theme
+        })).pipe(
+            switchMap((response: any) => {
+                return of(response);
+            }),
+            catchError( error =>{
+                console.error('Theme error',error);
+                return of(error);
+            })
+        );
+    }
+
+    /**
+     * Set the scheme on the config
+     *
+     * @param scheme
+     */
+    setScheme(scheme: Scheme):Observable<any>
+    {
+        return from(this._erpService.post('gestion_materiales/TitemsRecepcion/agreeIncoming',{
+            scheme
+        })).pipe(
+            switchMap((response: any) => {
+                return of(response);
+            }),
+            catchError( error =>{
+                console.error('Scheme error',error);
+                return of(error);
+            })
+        );
+    }
+
+    /**
+     * Set the layout on the config
+     *
+     * @param layout
+     */
+    setLayout(layout: string):Observable<any>
+    {
+        return from(this._erpService.post('gestion_materiales/TitemsRecepcion/agreeIncoming',{
+            layout
+        })).pipe(
+            switchMap((response: any) => {
+                return of(response);
+            }),
+            catchError( error =>{
+                console.error('Layout error',error);
+                return of(error);
+            })
+        );
     }
 }

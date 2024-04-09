@@ -10,16 +10,19 @@ import {RouterLink} from "@angular/router";
 import {SisMaterialesNgService} from "../sis-materiales-ng.service";
 import {Subject} from "rxjs";
 import {OverlayRef} from "@angular/cdk/overlay";
-import {NgIf} from "@angular/common";
+import {DatePipe, NgClass, NgFor, NgIf} from "@angular/common";
 import {DeclineDialogComponent} from "../incoming-list/decline-dialog/decline-dialog.component";
 import {MatDialog} from "@angular/material/dialog";
-import {AgreeDialogComponent} from "../agree-dialog/agree-dialog.component";
+import {AgreeDialogComponent} from "../incoming-list/agree-dialog/agree-dialog.component";
 import {MatMenuModule} from "@angular/material/menu";
+import {MatBadgeModule} from '@angular/material/badge';
+import * as moment from 'moment'    ;
+import {RectifyDialogComponent} from "../incoming-list/rectify-dialog/rectify-dialog.component";
 
 @Component({
     selector: 'erp-incoming-details',
     standalone: true,
-    imports: [FormsModule,ReactiveFormsModule,MatFormFieldModule,MatInputModule,MatIconModule,MatTooltipModule,RouterLink,NgIf,MatMenuModule],
+    imports: [FormsModule,ReactiveFormsModule,MatFormFieldModule,MatInputModule,MatIconModule,MatTooltipModule,RouterLink,NgIf,NgFor,NgClass,MatMenuModule,DatePipe,MatBadgeModule],
     templateUrl: './incoming-details.component.html'
 })
 export class IncomingDetailsComponent {
@@ -29,6 +32,7 @@ export class IncomingDetailsComponent {
 
     private _tagsPanelOverlayRef: OverlayRef;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
+    public current_date: any = moment().format("YYYY-MM-DD");
     /**
      * Constructor
      */
@@ -53,7 +57,6 @@ export class IncomingDetailsComponent {
         this._list.matDrawer.open();
 
         this._toolService.incoming$.subscribe((item)=>{
-            console.warn('item',item);
             this.incoming = item;
         });
 
@@ -114,13 +117,14 @@ export class IncomingDetailsComponent {
         return this._list.matDrawer.close();
     }
 
-    execute(option, row){
+    execute(option,row,size){
 
         let id =  row.id_recepcion;
+        let type =  row.tipo;
         let dialogRef;
         switch (option) {
             case 'print_single':
-                this._toolService.printIncoming(id,row.tipo,0).subscribe((html)=>{
+                this._toolService.printIncoming(id,row.tipo,0,size).subscribe((html)=>{
                     const popupWinindow = window.open('', '_blank', 'width=600,height=700,scrollbars=no,menubar=no,toolbar=no,location=no,status=no,titlebar=no');
                     popupWinindow.document.open();
                     popupWinindow.document.write(html);
@@ -128,7 +132,7 @@ export class IncomingDetailsComponent {
                 });
                 break;
             case 'print_block':
-                this._toolService.printIncoming(id,row.tipo,row.cantidad_recepcionada).subscribe((html)=>{
+                this._toolService.printIncoming(id,row.tipo,row.cantidad_recepcionada,size).subscribe((html)=>{
                     const popupWinindow = window.open('', '_blank', 'width=600,height=700,scrollbars=no,menubar=no,toolbar=no,location=no,status=no,titlebar=no');
                     popupWinindow.document.open();
                     popupWinindow.document.write(html);
@@ -139,15 +143,16 @@ export class IncomingDetailsComponent {
                 // Open the dialog
                 dialogRef = this._matDialog.open(AgreeDialogComponent,{
                     data:{
-                        id
-                    }
+                        id,
+                        type
+                    },
+                    disableClose: true
                 });
 
                 dialogRef.afterClosed()
                     .subscribe((result) =>
                     {
                         this._list.reload();
-                        console.warn('Compose dialog was closed!',result);
                         return this._list.matDrawer.close();
                     });
 
@@ -158,17 +163,39 @@ export class IncomingDetailsComponent {
                 dialogRef = this._matDialog.open(DeclineDialogComponent,{
                     data:{
                         id
-                    }
+                    },
+                    disableClose: true
                 });
 
                 dialogRef.afterClosed()
                     .subscribe((result) =>
                     {
                         this._list.reload();
-                        console.warn('Compose dialog was closed!',result);
                         return this._list.matDrawer.close();
                     });
                 break;
         }
+    }
+
+    isEmpty(item){
+        return Object.entries(item).length === 0
+    }
+
+    rectify(row){
+        let id =  row.id_recepcion;
+        // Open the dialog
+        let dialogRef = this._matDialog.open(RectifyDialogComponent,{
+            data:{
+                id
+            },
+            disableClose: true
+        });
+
+        dialogRef.afterClosed()
+            .subscribe((result) =>
+            {
+                this._list.reload();
+                return this._list.matDrawer.close();
+            });
     }
 }

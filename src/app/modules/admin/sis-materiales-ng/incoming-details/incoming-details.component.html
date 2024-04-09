@@ -25,66 +25,71 @@
                 <!-- Avatar and actions -->
                 <div class="flex flex-auto items-end -mt-16">
                     <!-- Avatar -->
-                    <div class="flex items-center justify-center w-32 h-32 rounded-full overflow-hidden ring-4 ring-bg-card">
+                    <div class="flex items-center" matBadge="{{incoming.rechazados}}"  matBadgeSize="medium" matBadgePosition="after" matBadgeOverlap="true" matBadgeColor="warn">
+                        <div class="flex items-center justify-center w-32 h-32 rounded-full overflow-hidden ring-4 ring-bg-card"
+                             [ngClass]="{'cursor-pointer':incoming.estado === 'aprobado' && incoming.control_fecha === this.current_date}"
+                             (click)="incoming.estado === 'aprobado' && incoming.control_fecha === this.current_date && rectify(incoming)">
 
-                        <div [matTooltip]="'PROCESO EN ESTADO '+incoming.estado.toUpperCase()"
-                            class="flex items-center justify-center w-full h-full rounded overflow-hidden uppercase text-8xl font-bold leading-none bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200">
-                            {{incoming.estado.charAt(0)}}
+                            <div [matTooltip]="'PROCESO EN ESTADO '+incoming.estado.toUpperCase()"
+                                class="flex items-center justify-center w-full h-full rounded overflow-hidden uppercase text-8xl font-bold leading-none bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                                 [ngClass] = "{'bg-red-200 dark:bg-red-700':incoming.rejected.length > 0 || incoming.estado === 'rechazado',
+                                              'bg-green-200 dark:bg-green-700':incoming.estado === 'aprobado' && incoming.rejected.length === 0}">
+                                {{incoming.estado.charAt(0)}}
+                            </div>
                         </div>
                     </div>
                     <!-- Actions -->
                     <div class="flex items-center ml-auto mb-1">
-                        <button *ngIf="incoming.estado == 'aprobado'" [matMenuTriggerFor]="actionMenu" class="mr-2">
-                            <mat-icon [matTooltip]="'Imprimir Tickets'" class="icon-size-7 text-amber-500 dark:text-amber-400 hover:text-amber-700" svgIcon="heroicons_outline:printer"></mat-icon>
-
-                            <mat-menu #actionMenu>
-
-                                <button mat-menu-item
-                                        (click)="execute('print_single', incoming)">
-                                    <mat-icon [matTooltip]="'Imprimir Ticket Simple'" class="icon-size-7 text-amber-500 dark:text-amber-400 hover:text-amber-700" svgIcon="heroicons_outline:printer"></mat-icon>
-                                    Imp. Simple
-                                </button>
-
-                                <button mat-menu-item
-                                        (click)="execute('print_block', incoming)">
-                                    <mat-icon [matTooltip]="'Imprimir Tickets Bloque'" class="icon-size-7 text-amber-500 dark:text-amber-400 hover:text-amber-700" svgIcon="heroicons_outline:printer"></mat-icon>
-                                    Imp. Bloque
-                                </button>
-
-                            </mat-menu>
+                        <button class="mr-2"
+                                *ngIf="incoming.estado == 'aprobado' && incoming.tipo !== 'Herramientas'"
+                                (click)="execute('print_single',incoming,'small')">
+                            <mat-icon [matTooltip]="'Imprimir Etiqueta'" class="icon-size-7 text-amber-500 dark:text-amber-400 hover:text-amber-700" svgIcon="heroicons_outline:printer"></mat-icon>
                         </button>
 
-                        <button *ngIf="incoming.estado == 'incoming'" (click)="execute('agree',incoming)" class="mx-2">
+                        <button class="ml-2"
+                                *ngIf="incoming.estado == 'aprobado' && incoming.cantidad_recepcionada > 1 && incoming.tipo !== 'Herramientas'"
+                                (click)="execute('print_block', incoming,'large')">
+                            <mat-icon [matTooltip]="'Imprimir Etiquetas'" class="icon-size-7 text-primary-500 dark:text-primary-400 hover:text-primary-700" svgIcon="heroicons_outline:printer"></mat-icon>
+                        </button>
+
+                        <button *ngIf="incoming.estado == 'incoming'" (click)="execute('agree',incoming,'')" class="mx-2">
                             <mat-icon [matTooltip]="'Aceptar Entrada'" class="icon-size-7 text-green-500 dark:text-green-400 hover:text-green-700" svgIcon="mat_outline:check_circle"></mat-icon>
                         </button>
-                        <button *ngIf="incoming.estado == 'incoming'" (click)="execute('decline',incoming)" class="ml-2">
+                        <button *ngIf="incoming.estado == 'incoming'" (click)="execute('decline',incoming,'')" class="ml-2">
                             <mat-icon [matTooltip]="'Rechazar Entrada'" class="icon-size-7 text-red-500 dark:text-red-400  hover:text-red-700" svgIcon="heroicons_outline:x-circle"></mat-icon>
+                        </button>
+
+                        <button *ngIf="incoming.estado === 'aprobado' && incoming.control_fecha === this.current_date"
+                                class="ml-2"
+                                (click)="rectify(incoming)">
+                            <mat-icon [matTooltip]="'Rectificar Entrada'" class="icon-size-7 text-green-500 dark:text-green-400 hover:text-green-700" svgIcon="mat_outline:recycling"></mat-icon>
                         </button>
                     </div>
                 </div>
 
                 <!-- Name -->
                 <div class="mt-3 text-4xl font-bold truncate">P/N: {{incoming.nro_parte_cot}}</div>
+                <div class="mt-3 text-lg font-bold truncate">DESC: {{incoming.descripcion_cot}}</div>
 
                 <div class="flex flex-col mt-4 pt-6 border-t space-y-8">
 
                     <div class="leading-6 font-bold " [matTooltip]="'Descripción de los campos de la entrada.'">DETALLE ENTRADA</div>
                     <!-- Fields -->
                     <ng-container>
-                        <div class="flex text-primary">
+                        <div class="flex">
                             <div class="w-full flex-auto gt-xs:pr-3" appearance="fill">
-                                <mat-label class="leading-6 font-bold text-lg">Tipo</mat-label>
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Tipo</mat-label>
                                 <div class="flex sm:items-center">
                                     <mat-icon [svgIcon]="'heroicons_solid:home'"></mat-icon>
-                                    <div class="ml-6 leading-6">{{incoming.tipo}}</div>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.tipo}}</div>
                                 </div>
                             </div>
 
                             <div class="boby-mat-no-subscript boby-mat-dense flex-auto w-full ml-2 sm:ml-4">
-                                <mat-label class="leading-6 font-bold text-lg">Cant. Requerida</mat-label>
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Cant. Requerida</mat-label>
                                 <div class="flex sm:items-center">
                                     <mat-icon [svgIcon]="'heroicons_solid:qr-code'"></mat-icon>
-                                    <div class="ml-6 leading-6">{{incoming.cantidad_det}}</div>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.cantidad_det}}</div>
                                 </div>
                             </div>
 
@@ -93,20 +98,20 @@
 
                     <!-- Fields -->
                     <ng-container>
-                        <div class="flex text-primary">
+                        <div class="flex">
                             <div class="boby-mat-no-subscript boby-mat-dense w-full flex-auto">
-                                <mat-label class="leading-6 font-bold text-lg">Cant. Recepción</mat-label>
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Cant. Recepción</mat-label>
                                 <div class="flex sm:items-center">
                                     <mat-icon [svgIcon]="'heroicons_solid:qr-code'"></mat-icon>
-                                    <div class="ml-6 leading-6">{{incoming.cantidad_recepcionada}}</div>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.cantidad_recepcionada}}</div>
                                 </div>
                             </div>
 
                             <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3 ml-2 sm:ml-4" appearance="fill">
-                                <mat-label class="leading-6 font-bold text-lg">Cant. Pendiente</mat-label>
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Cant. Pendiente</mat-label>
                                 <div class="flex sm:items-center">
                                     <mat-icon [svgIcon]="'heroicons_solid:qr-code'"></mat-icon>
-                                    <div class="ml-6 leading-6">{{incoming.cantidad_pendiente}}</div>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.cantidad_pendiente}}</div>
                                 </div>
                             </div>
 
@@ -115,20 +120,20 @@
 
                     <!-- Fields -->
                     <ng-container>
-                        <div class="flex text-primary">
+                        <div class="flex">
                             <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
-                                <mat-label class="leading-6 font-bold text-lg">CD</mat-label>
+                                <mat-label class="leading-6 font-bold text-lg text-primary">CD</mat-label>
                                 <div class="flex sm:items-center">
                                     <mat-icon [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
-                                    <div class="ml-6 leading-6">{{incoming.cd}}</div>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.cd}}</div>
                                 </div>
                             </div>
 
                             <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3 ml-2 sm:ml-4" appearance="fill">
-                                <mat-label class="leading-6 font-bold text-lg">Estado</mat-label>
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Fecha Recepción</mat-label>
                                 <div class="flex sm:items-center">
                                     <mat-icon [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
-                                    <div class="ml-6 leading-6">{{incoming.estado}}</div>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.fecha_recepcionada}}</div>
                                 </div>
                             </div>
 
@@ -137,20 +142,20 @@
 
                     <!-- Fields -->
                     <ng-container>
-                        <div class="flex text-primary">
+                        <div class="flex">
                             <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
-                                <mat-label class="leading-6 font-bold text-lg">Nro. Tramite</mat-label>
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Nro. Tramite</mat-label>
                                 <div class="flex sm:items-center">
                                     <mat-icon [svgIcon]="'heroicons_solid:hashtag'"></mat-icon>
-                                    <div class="ml-6 leading-6">{{incoming.nro_tramite}}</div>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.nro_tramite}}</div>
                                 </div>
                             </div>
 
                             <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3 ml-2 sm:ml-4" appearance="fill">
-                                <mat-label class="leading-6 font-bold text-lg">Nro. Serial</mat-label>
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Nro. Serial</mat-label>
                                 <div class="flex sm:items-center">
                                     <mat-icon [svgIcon]="'heroicons_solid:hashtag'"></mat-icon>
-                                    <div class="ml-6 leading-6">{{incoming.nro_serial}}</div>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.nro_serial}}</div>
                                 </div>
                             </div>
 
@@ -159,20 +164,20 @@
 
                     <!-- Fields -->
                     <ng-container>
-                        <div class="flex text-primary">
+                        <div class="flex">
                             <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
-                                <mat-label class="leading-6 font-bold text-lg">Nro. PO</mat-label>
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Nro. PO</mat-label>
                                 <div class="flex sm:items-center">
                                     <mat-icon [svgIcon]="'heroicons_solid:hashtag'"></mat-icon>
-                                    <div class="ml-6 leading-6">{{incoming.nro_po}}</div>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.nro_po}}</div>
                                 </div>
                             </div>
 
                             <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3 ml-2 sm:ml-4" appearance="fill">
-                                <mat-label class="leading-6 font-bold text-lg">Nor. Parte Alterno</mat-label>
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Nor. Parte Alterno</mat-label>
                                 <div class="flex sm:items-center">
                                     <mat-icon [svgIcon]="'heroicons_solid:hashtag'"></mat-icon>
-                                    <div class="ml-6 leading-6">{{incoming.nro_parte_alterno_cot}}</div>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.nro_parte_alterno_cot}}</div>
                                 </div>
                             </div>
 
@@ -181,20 +186,20 @@
 
                     <!-- Fields -->
                     <ng-container>
-                        <div class="flex text-primary">
+                        <div class="flex">
                             <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
-                                <mat-label class="leading-6 font-bold text-lg">Fecha Recepción</mat-label>
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Nro. Guia</mat-label>
+                                <div class="flex sm:items-center">
+                                    <mat-icon [svgIcon]="'heroicons_solid:hashtag'"></mat-icon>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.nro_guia}}</div>
+                                </div>
+                            </div>
+
+                            <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3 ml-2 sm:ml-4" appearance="fill">
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Fecha Guia</mat-label>
                                 <div class="flex sm:items-center">
                                     <mat-icon [svgIcon]="'heroicons_solid:calendar-days'"></mat-icon>
-                                    <div class="ml-6 leading-6">{{incoming.fecha_recepcionada}}</div>
-                                </div>
-                            </div>
-
-                            <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3 ml-2 sm:ml-4" appearance="fill">
-                                <mat-label class="leading-6 font-bold text-lg">Notificación</mat-label>
-                                <div class="flex sm:items-center">
-                                    <mat-icon [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
-                                    <div class="ml-6 leading-6">{{incoming.notificacion}}</div>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.fecha_guia | date:'d/M/yyyy'}}</div>
                                 </div>
                             </div>
 
@@ -203,14 +208,36 @@
 
                     <!-- Fields -->
                     <ng-container>
-                        <div class="flex text-primary">
+                        <div class="flex">
                             <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
-                                <mat-label class="leading-6 font-bold text-lg">Descripción</mat-label>
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Descripción</mat-label>
                                 <div class="flex sm:items-center">
                                     <mat-icon [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
-                                    <div class="ml-6 leading-6">{{incoming.descripcion_cot}}</div>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.descripcion_cot}}</div>
                                 </div>
                             </div>
+                        </div>
+                    </ng-container>
+
+                    <!-- Fields -->
+                    <ng-container>
+                        <div class="flex">
+                            <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Fecha Reg.</mat-label>
+                                <div class="flex sm:items-center">
+                                    <mat-icon [svgIcon]="'heroicons_solid:calendar-days'"></mat-icon>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.fecha_reg | date:'d/M/yyyy H:mm'}}</div>
+                                </div>
+                            </div>
+
+                            <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3 ml-2 sm:ml-4" appearance="fill">
+                                <mat-label class="leading-6 font-bold text-lg text-primary">Usuario Reg.</mat-label>
+                                <div class="flex sm:items-center">
+                                    <mat-icon [svgIcon]="'heroicons_solid:user-circle'"></mat-icon>
+                                    <div class="ml-6 leading-6 font-bold text-lg">{{incoming.usr_reg}}</div>
+                                </div>
+                            </div>
+
                         </div>
                     </ng-container>
 
@@ -219,21 +246,21 @@
 
                         <!-- Fields -->
                         <ng-container>
-                            <div class="flex text-primary">
+                            <div class="flex">
 
                                 <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
-                                    <mat-label class="leading-6 font-bold text-lg">Nro. Serial</mat-label>
+                                    <mat-label class="leading-6 font-bold text-lg text-primary">Nro. Serial</mat-label>
                                     <div class="flex sm:items-center">
                                         <mat-icon [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
-                                        <div class="ml-6 leading-6">{{incoming.serial_registrado}}</div>
+                                        <div class="ml-6 leading-6 font-bold text-lg">{{incoming.serial_registrado}}</div>
                                     </div>
                                 </div>
 
                                 <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3 ml-2 sm:ml-4" appearance="fill">
-                                    <mat-label class="leading-6 font-bold text-lg">Nro. Lote</mat-label>
+                                    <mat-label class="leading-6 font-bold text-lg text-primary">Nro. Lote</mat-label>
                                     <div class="flex sm:items-center">
                                         <mat-icon [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
-                                        <div class="ml-6 leading-6">{{incoming.nro_lote}}</div>
+                                        <div class="ml-6 leading-6 font-bold text-lg">{{incoming.nro_lote}}</div>
                                     </div>
                                 </div>
 
@@ -242,37 +269,12 @@
 
                         <!-- Fields -->
                         <ng-container>
-                            <div class="flex text-primary">
+                            <div class="flex">
                                 <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
-                                    <mat-label class="leading-6 font-bold text-lg">Fecha Vencimiento</mat-label>
+                                    <mat-label class="leading-6 font-bold text-lg text-primary">Fecha Vencimiento</mat-label>
                                     <div class="flex sm:items-center">
                                         <mat-icon [svgIcon]="'heroicons_solid:calendar-days'"></mat-icon>
-                                        <div class="ml-6 leading-6">{{incoming.fecha_vencimiento}}</div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </ng-container>
-
-                        <div class="leading-6 font-bold pt-6 border-t space-y-8" [matTooltip]="'Descripción de los campos de la entrada aprobada.'">DETALLE FIRMA INSPECTOR</div>
-
-                        <!-- Fields -->
-                        <ng-container>
-                            <div class="flex text-primary">
-
-                                <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
-                                    <mat-label class="leading-6 font-bold text-lg">Cargo</mat-label>
-                                    <div class="flex sm:items-center">
-                                        <mat-icon [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
-                                        <div class="ml-6 leading-6">{{incoming.json_firma_supervisor.Cargo}}</div>
-                                    </div>
-                                </div>
-
-                                <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3 ml-2 sm:ml-4" appearance="fill">
-                                    <mat-label class="leading-6 font-bold text-lg">Nombre Técnico</mat-label>
-                                    <div class="flex sm:items-center">
-                                        <mat-icon [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
-                                        <div class="ml-6 leading-6">{{incoming.json_firma_supervisor.NombreTecnico}}</div>
+                                        <div class="ml-6 leading-6 font-bold text-lg">{{incoming.fecha_vencimiento | date:'dd/MM/yyyy'}}</div>
                                     </div>
                                 </div>
 
@@ -280,22 +282,48 @@
                         </ng-container>
 
                         <!-- Fields -->
-                        <ng-container>
-                            <div class="flex text-primary">
+                        <ng-container *ngIf="!isEmpty(incoming.json_firma_supervisor)">
+
+                            <div class="leading-6 font-bold pt-6 border-t space-y-8" [matTooltip]="'Descripción de los campos de la entrada aprobada.'">DETALLE FIRMA INSPECTOR</div>
+
+                            <div class="flex">
 
                                 <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
-                                    <mat-label class="leading-6 font-bold text-lg">Nro. Licencia</mat-label>
+                                    <mat-label class="leading-6 font-bold text-lg text-primary">Cargo</mat-label>
                                     <div class="flex sm:items-center">
                                         <mat-icon [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
-                                        <div class="ml-6 leading-6">{{incoming.json_firma_supervisor.NroLicencia}}</div>
+                                        <div class="ml-6 leading-6 font-bold text-lg">{{incoming.json_firma_supervisor.Cargo}}</div>
                                     </div>
                                 </div>
 
                                 <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3 ml-2 sm:ml-4" appearance="fill">
-                                    <mat-label class="leading-6 font-bold text-lg">Nro. Sello</mat-label>
+                                    <mat-label class="leading-6 font-bold text-lg text-primary">Nombre Técnico</mat-label>
                                     <div class="flex sm:items-center">
                                         <mat-icon [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
-                                        <div class="ml-6 leading-6">{{incoming.json_firma_supervisor.NroSello}}</div>
+                                        <div class="ml-6 leading-6 font-bold text-lg">{{incoming.json_firma_supervisor.NombreTecnico}}</div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </ng-container>
+
+                        <!-- Fields -->
+                        <ng-container>
+                            <div class="flex">
+
+                                <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
+                                    <mat-label class="leading-6 font-bold text-lg text-primary">Nro. Licencia</mat-label>
+                                    <div class="flex sm:items-center">
+                                        <mat-icon [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
+                                        <div class="ml-6 leading-6 font-bold text-lg">{{incoming.json_firma_supervisor.NroLicencia}}</div>
+                                    </div>
+                                </div>
+
+                                <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3 ml-2 sm:ml-4" appearance="fill">
+                                    <mat-label class="leading-6 font-bold text-lg text-primary">Nro. Sello</mat-label>
+                                    <div class="flex sm:items-center">
+                                        <mat-icon [svgIcon]="'heroicons_solid:exclamation-circle'"></mat-icon>
+                                        <div class="ml-6 leading-6 font-bold text-lg">{{incoming.json_firma_supervisor.NroSello}}</div>
                                     </div>
                                 </div>
 
@@ -304,26 +332,90 @@
 
                     </ng-container>
 
-                    <ng-container *ngIf="incoming.estado == 'rechazado'">
+                    <ng-container *ngIf="incoming.estado == 'rechazado' || incoming.rejected.length > 0">
                         <div class="leading-6 font-bold pt-6 border-t space-y-8" [matTooltip]="'Descripción de los campos de la entrada rechazada.'">DETALLE RECHAZO</div>
                         <!-- Fields -->
                         <ng-container>
-                            <div class="flex text-primary">
+                            <div class="flex">
                                 <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
-                                    <mat-label class="leading-6 font-bold text-lg">Motivo Rechazo</mat-label>
+                                    <mat-label class="leading-6 font-bold text-lg text-primary">Motivo Rechazo</mat-label>
                                     <div class="flex sm:items-center">
                                         <mat-icon [svgIcon]="'heroicons_solid:x-circle'"></mat-icon>
-                                        <div class="ml-6 leading-6">{{incoming.motivo_rechazo}}</div>
+                                        <div class="ml-6 leading-6 font-bold text-lg">{{incoming.motivo_rechazo}}</div>
                                     </div>
                                 </div>
 
                                 <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3 ml-2 sm:ml-4" appearance="fill">
-                                    <mat-label class="leading-6 font-bold text-lg">Observación</mat-label>
+                                    <mat-label class="leading-6 font-bold text-lg text-primary">Observación</mat-label>
                                     <div class="flex sm:items-center">
                                         <mat-icon [svgIcon]="'heroicons_solid:x-circle'"></mat-icon>
-                                        <div class="ml-6 leading-6">{{incoming.observacion}}</div>
+                                        <div class="ml-6 leading-6 font-bold text-lg">{{incoming.observacion}}</div>
                                     </div>
                                 </div>
+
+                            </div>
+                        </ng-container>
+
+                        <ng-container *ngIf="incoming.rejected.length > 0">
+                            <div class="flex" *ngFor="let rejected of incoming.rejected; let i = index">
+                                <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
+                                    <mat-label class="leading-6 font-bold text-lg text-primary">Motivo Rechazo</mat-label>
+                                    <div class="flex sm:items-center">
+                                        <mat-icon [svgIcon]="'heroicons_solid:x-circle'"></mat-icon>
+                                        <div class="ml-6 leading-6 font-bold text-lg">{{rejected.motivo_rechazo}}</div>
+                                    </div>
+                                </div>
+
+                                <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3 ml-2 sm:ml-4" appearance="fill">
+                                    <mat-label class="leading-6 font-bold text-lg text-primary">Observación</mat-label>
+                                    <div class="flex sm:items-center">
+                                        <mat-icon [svgIcon]="'heroicons_solid:x-circle'"></mat-icon>
+                                        <div class="ml-6 leading-6 font-bold text-lg">{{rejected.observacion}}</div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </ng-container>
+                    </ng-container>
+
+                    <ng-container *ngIf="incoming.rectificacion.length > 0">
+                        <div class="leading-6 font-bold pt-6 border-t space-y-8" [matTooltip]="'Descripción de los campos de la entrada rectificada.'">DETALLE RECTIFICACIÓN</div>
+
+                        <ng-container *ngIf="incoming.rectificacion.length > 0">
+                            <div class="flex flex-col" *ngFor="let rectify of incoming.rectificacion; let i = index">
+
+                                <ng-container>
+                                    <div class="flex">
+                                        <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
+                                            <mat-label class="leading-6 font-bold text-lg text-primary">Usuario</mat-label>
+                                            <div class="flex sm:items-center">
+                                                <mat-icon [svgIcon]="'heroicons_solid:user-circle'"></mat-icon>
+                                                <div class="ml-6 leading-6 font-bold text-lg">{{rectify.usuario_reg}}</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
+                                            <mat-label class="leading-6 font-bold text-lg text-primary">Fecha</mat-label>
+                                            <div class="flex sm:items-center">
+                                                <mat-icon [svgIcon]="'heroicons_solid:calendar-days'"></mat-icon>
+                                                <div class="ml-6 leading-6 font-bold text-lg">{{rectify.fecha_reg | date:'d/M/yyyy'}}</div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </ng-container>
+
+                                <ng-container>
+                                    <div class="flex">
+                                        <div class="w-full boby-mat-dense flex-auto gt-xs:pr-3" appearance="fill">
+                                            <mat-label class="leading-6 font-bold text-lg text-primary">Observación</mat-label>
+                                            <div class="flex sm:items-center">
+                                                <mat-icon [svgIcon]="'heroicons_solid:x-circle'"></mat-icon>
+                                                <div class="ml-6 leading-6 font-bold text-lg">{{rectify.observacion}}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ng-container>
 
                             </div>
                         </ng-container>

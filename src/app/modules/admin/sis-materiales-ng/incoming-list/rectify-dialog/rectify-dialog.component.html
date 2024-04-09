@@ -2,7 +2,7 @@
 
     <!-- Header -->
     <div class="flex flex-0 items-center justify-between h-16 pr-3 sm:pr-5 pl-6 sm:pl-8 bg-primary text-on-primary">
-        <div class="text-lg font-medium">ENTRADA RECHAZADA</div>
+        <div class="text-lg font-medium">RECTIFICAR ENTRADA</div>
         <button
             mat-icon-button
             [tabIndex]="-1"
@@ -13,25 +13,10 @@
         </button>
     </div>
 
-    <!-- Compose form -->
+    <!-- Rectify form -->
     <form
         class="flex flex-col flex-auto p-6 sm:p-8 overflow-y-auto"
-        [formGroup]="declineForm">
-
-        <!-- Decline Reason -->
-        <mat-form-field class="w-full fuse-mat-dense flex-auto" appearance="fill">
-            <mat-label>Motivo Rechazo</mat-label>
-            <mat-icon
-                matPrefix
-                class="hidden sm:flex icon-size-5"
-                [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
-            <mat-select [placeholder]="'Seleccione movito rechazo ...'"
-                        [formControlName]="'motivo_rechazo'">
-                <mat-option *ngFor="let item of listReason" [value]="item.title">
-                    {{item.title}}
-                </mat-option>
-            </mat-select>
-        </mat-form-field>
+        [formGroup]="rectifyForm">
 
         <!-- Description -->
         <mat-form-field [subscriptSizing]="'dynamic'">
@@ -39,7 +24,7 @@
             <textarea
                 class="textarea"
                 matInput
-                [placeholder]="'Describa el motivo de su rechazo !!!'"
+                [placeholder]="'Describa el motivo de la rectificacion !!!'"
                 [formControlName]="'observacion'"
                 [rows]="4"></textarea>
         </mat-form-field>
@@ -60,7 +45,7 @@
                     class="ml-3"
                     mat-stroked-button
                     [color]="'primary'"
-                    [disabled]="declineForm.invalid"
+                    [disabled]="rectifyForm.invalid"
                     (click)="save()">
                     <ng-container *ngIf="processing">
                         <mat-icon><mat-spinner diameter="20"></mat-spinner></mat-icon>

@@ -3,7 +3,7 @@
     "version": 1,
     "newProjectRoot": "projects",
     "projects": {
-        "erp-core-structure": {
+        "materiales-ng": {
             "projectType": "application",
             "schematics": {
                 "@schematics/angular:component": {
@@ -17,7 +17,7 @@
                 "build": {
                     "builder": "@angular-devkit/build-angular:browser",
                     "options": {
-                        "outputPath": "dist/erp-core-structure",
+                        "outputPath": "dist/materiales-ng",
                         "index": "src/index.html",
                         "main": "src/main.ts",
                         "polyfills": [
@@ -99,10 +99,10 @@
                     "builder": "@angular-devkit/build-angular:dev-server",
                     "configurations": {
                         "production": {
-                          "buildTarget": "erp-core-structure:build:production"
+                          "buildTarget": "materiales-ng:build:production"
                         },
                         "development": {
-                          "buildTarget": "erp-core-structure:build:development"
+                          "buildTarget": "materiales-ng:build:development"
                         }
                     },
                     "defaultConfiguration": "development"
@@ -110,7 +110,7 @@
                 "extract-i18n": {
                     "builder": "@angular-devkit/build-angular:extract-i18n",
                     "options": {
-                      "buildTarget": "erp-core-structure:build"
+                      "buildTarget": "materiales-ng:build"
                     }
                 },
                 "test": {

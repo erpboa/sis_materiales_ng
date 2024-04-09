@@ -5,6 +5,7 @@ import {IncomingListComponent} from "./incoming-list/incoming-list.component";
 import {SisMaterialesNgService} from "./sis-materiales-ng.service";
 import {IncomingDetailsComponent} from "./incoming-details/incoming-details.component";
 import {catchError,throwError} from "rxjs";
+import {ParametersComponent} from "./parameters/parameters.component";
 
 /**
  * Detail resolver
@@ -79,6 +80,10 @@ const canDeactivateDetails = (
 };
 
 export default [
+    {
+        path: 'parameters',
+        component: ParametersComponent
+    },
     {
         path     : '',
         component: SisMaterialesNgComponent,

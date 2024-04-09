@@ -10,14 +10,14 @@ import { LayoutComponent } from 'app/layout/layout.component';
 export const appRoutes: Route[] = [
 
     // Redirect empty path to '/example'
-    {path: '', pathMatch : 'full', redirectTo: '/system'},
+    {path: '', pathMatch : 'full', redirectTo: '/apps'},
 
     // Redirect signed-in user to the '/example'
     //
     // After the user signs in, the sign-in page will redirect the user to the 'signed-in-redirect'
     // path. Below is another redirection for that path to redirect the user to the desired
     // location. This is a small convenience to keep all main routes together here on this file.
-    {path: 'signed-in-redirect', pathMatch : 'full', redirectTo: '/system'},
+    {path: 'signed-in-redirect', pathMatch : 'full', redirectTo: '/apps'},
 
     // Auth routes for guests
     {
@@ -75,15 +75,11 @@ export const appRoutes: Route[] = [
         },
         children: [
             {
-                path: 'system',
+                path: 'apps',//system
                 children: [
                     {
-                        path: 'materiales',
+                        path: 'module',//materiales
                         loadChildren: () => import('app/modules/admin/sis-materiales-ng/sis-materiales-ng.routes')
-                    },
-                    {
-                        path: 'example',
-                        loadChildren: () => import('app/modules/admin/example/example.routes')
                     }
                 ],
             }

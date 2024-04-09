@@ -1,0 +1,98 @@
+<div class="flex flex-col max-w-240 md:min-w-160 max-h-screen -m-6">
+
+    <!-- Header -->
+    <div class="flex flex-0 items-center justify-between h-16 pr-3 sm:pr-5 pl-6 sm:pl-8 bg-primary text-on-primary">
+        <div class="text-lg font-medium">ENTRADA APROBADA</div>
+        <button
+            mat-icon-button
+            [tabIndex]="-1"
+            (click)="discard()">
+            <mat-icon
+                class="text-current"
+                [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+        </button>
+    </div>
+
+    <!-- Compose form -->
+    <form
+        class="flex flex-col flex-auto p-6 sm:p-8 overflow-y-auto"
+        [formGroup]="agreeForm">
+
+        <!-- Decline Reason -->
+        <mat-form-field class="boby-mat-no-subscript w-full" *ngIf="['Rotables'].includes(type)">
+            <mat-label>Nro. Serial</mat-label>
+            <mat-icon
+                matPrefix
+                class="hidden sm:flex icon-size-5"
+                [svgIcon]="'heroicons_solid:hashtag'"></mat-icon>
+            <input
+                matInput
+                [formControlName]="'serial_registrado'"
+                [placeholder]="'Numero de Serial'"
+                [spellcheck]="false">
+        </mat-form-field>
+
+        <!-- Decline Reason -->
+        <mat-form-field class="boby-mat-no-subscript w-full" *ngIf="['Consumibles','Herramientas'].includes(type)">
+            <mat-label>Nro. Lote</mat-label>
+            <mat-icon
+                matPrefix
+                class="hidden sm:flex icon-size-5"
+                [svgIcon]="'heroicons_solid:hashtag'"></mat-icon>
+            <input
+                matInput
+                [formControlName]="'nro_lote'"
+                [placeholder]="'Numero de Lote'"
+                [spellcheck]="false">
+        </mat-form-field>
+
+        <!-- Description -->
+        <mat-form-field
+            class="w-full"
+            [subscriptSizing]="'dynamic'">
+            <mat-label>Fecha Vencimiento</mat-label>
+            <mat-icon
+                matPrefix
+                class="hidden sm:flex icon-size-5"
+                [svgIcon]="'heroicons_solid:calendar-days'"></mat-icon>
+            <input
+                matInput
+                [matDatepicker]="expirationDatepicker"
+                [formControlName]="'fecha_vencimiento'"
+                [placeholder]="'Fecha vencimiento de la Entrada'">
+            <mat-datepicker-toggle
+                matSuffix
+                [for]="expirationDatepicker">
+            </mat-datepicker-toggle>
+            <mat-datepicker #expirationDatepicker></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Actions -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-end mt-4 sm:mt-6">
+            <div class="flex items-center mt-4 sm:mt-0">
+                <!-- Discard -->
+                <button
+                    class="ml-auto sm:ml-0"
+                    mat-stroked-button
+                    [color]="'warn'"
+                    (click)="discard()">
+                    Cancelar
+                </button>
+                <!-- Save -->
+                <button
+                    class="ml-3"
+                    mat-stroked-button
+                    [color]="'primary'"
+                    [disabled]="agreeForm.invalid"
+                    (click)="save()">
+
+                    <ng-container *ngIf="processing">
+                        <mat-icon><mat-spinner diameter="20"></mat-spinner></mat-icon
+                    ></ng-container>
+
+                    <span>Guardar</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

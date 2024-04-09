@@ -110,7 +110,7 @@ export class AuthService
 
         return from(PxpClient.login(credentials.email, credentials.password)).pipe(
             switchMap((response: any) =>
-            { console.warn('signIn', response);
+            {
                 if ( response.data.success ) {
                     this._authenticated = true;
 

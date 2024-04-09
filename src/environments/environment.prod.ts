@@ -1,15 +1,15 @@
 export const environment = {
     production: true,
-    host: 'erp.boa.bo',
-    baseUrl: 'pxp/lib/rest',
+    host: 'apind.boa.bo',
+    baseUrl: 'api/erp-nd/Erp/doRequest',
     mode: 'cors',
     port: location.protocol.replace(':', '') == 'https' ? '443' : '80',
     protocol: location.protocol.replace(':', ''),
-    backendRestVersion: 1,
+    backendRestVersion: 2,
     initWebSocket: 'NO',
     portWs: '8010',
     backendVersion: 'v1',
     urlLogin: '',
-    storeToken: false,
+    storeToken: true,
     filesUrl : location.protocol.replace(':', '')+'://erp.boa.bo/'
 };
