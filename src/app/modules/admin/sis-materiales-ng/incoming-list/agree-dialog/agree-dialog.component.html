@@ -1,8 +1,8 @@
 <div class="flex flex-col max-w-240 md:min-w-160 max-h-screen -m-6">
 
     <!-- Header -->
-    <div class="flex flex-0 items-center justify-between h-16 pr-3 sm:pr-5 pl-6 sm:pl-8 bg-primary text-on-primary">
-        <div class="text-lg font-medium">ENTRADA APROBADA</div>
+    <div class="flex flex-0 items-center justify-between h-8 pr-3 sm:pr-5 pl-6 sm:pl-8 bg-primary text-on-primary">
+        <div class="text-lg font-medium">APROBAR ENTRADA</div>
         <button
             mat-icon-button
             [tabIndex]="-1"
@@ -18,7 +18,7 @@
         class="flex flex-col flex-auto p-6 sm:p-8 overflow-y-auto"
         [formGroup]="agreeForm">
 
-        <!-- Decline Reason -->
+        <!-- Nro Serial -->
         <mat-form-field class="boby-mat-no-subscript w-full" *ngIf="['Rotables'].includes(type)">
             <mat-label>Nro. Serial</mat-label>
             <mat-icon
@@ -32,7 +32,7 @@
                 [spellcheck]="false">
         </mat-form-field>
 
-        <!-- Decline Reason -->
+        <!-- Nro Lote -->
         <mat-form-field class="boby-mat-no-subscript w-full" *ngIf="['Consumibles','Herramientas'].includes(type)">
             <mat-label>Nro. Lote</mat-label>
             <mat-icon
@@ -46,9 +46,9 @@
                 [spellcheck]="false">
         </mat-form-field>
 
-        <!-- Description -->
+        <!-- Expiration -->
         <mat-form-field
-            class="w-full"
+            class="w-full boby-mat-no-subscript"
             [subscriptSizing]="'dynamic'">
             <mat-label>Fecha Vencimiento</mat-label>
             <mat-icon
@@ -65,6 +65,27 @@
                 [for]="expirationDatepicker">
             </mat-datepicker-toggle>
             <mat-datepicker #expirationDatepicker></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Inspection -->
+        <mat-form-field
+            class="w-full boby-mat-no-subscript mt-4"
+            [subscriptSizing]="'dynamic'" *ngIf="['Rotables'].includes(type)">
+            <mat-label>Fecha Inspección</mat-label>
+            <mat-icon
+                matPrefix
+                class="hidden sm:flex icon-size-5"
+                [svgIcon]="'heroicons_solid:calendar-days'"></mat-icon>
+            <input
+                matInput
+                [matDatepicker]="inspectionDatepicker"
+                [formControlName]="'fecha_inspeccion'"
+                [placeholder]="'Fecha Inspección de la Entrada'">
+            <mat-datepicker-toggle
+                matSuffix
+                [for]="inspectionDatepicker">
+            </mat-datepicker-toggle>
+            <mat-datepicker #inspectionDatepicker></mat-datepicker>
         </mat-form-field>
 
         <!-- Actions -->

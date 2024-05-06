@@ -1,0 +1,138 @@
+<div mat-dialog-title cdkDrag cdkDragRootElement=".cdk-overlay-pane" cdkDragHandle class="flex flex-0 items-center justify-between h-8 pr-3 sm:pr-1 pl-6 sm:pl-8 bg-primary text-on-primary">
+    <div class="text-lg font-medium">DATOS DE DETALLE [{{this.contador}} de {{this.row.cantidad_recepcionada}}]</div>
+    <button
+        mat-icon-button
+        (click)="Close()"
+        [tabIndex]="-1">
+        <mat-icon
+            class="text-current"
+            [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+    </button>
+</div>
+
+<mat-dialog-content [formGroup]="ControlForm">
+
+    <div class="flex flex-col font-semibold leading-none tracking-tighter">
+        <!-- Details -->
+        <ng-container *ngFor="let details of ControlForm.get('details')['controls']; let i = index; let first = first; let last = last; trackBy: trackByFn">
+            <div class="flex items-center justify-center m-4 p-4 bg-card rounded border-2">
+                <ng-container >
+                    <div class="flex items-center w-10 pl-2">
+                        {{details.get('contador').value}}
+                    </div>
+                </ng-container>
+
+                <div class="flex flex-wrap">
+                    <mat-form-field class="fuse-mat-no-subscript flex-auto min-w-44">
+                        <!--<mat-label *ngIf="first">Serial</mat-label>-->
+                        <input
+                            matInput
+                            [formControl]="details.get('serial_registrado')"
+                            [placeholder]="'Nro. Serial'"
+                            matTooltip="Nro. Serial"
+                        >
+                    </mat-form-field>
+
+                    <mat-form-field class="fuse-mat-no-subscript flex-auto md:ml-4 min-w-44">
+                        <!--<mat-label *ngIf="first">Lote</mat-label>-->
+                        <input
+                            matInput
+                            [formControl]="details.get('nro_lote')"
+                            [placeholder]="'Nro. Lote'"
+                            matTooltip="Nro. Lote">
+                    </mat-form-field>
+
+                    <!-- Expiration -->
+                    <mat-form-field class="fuse-mat-no-subscript flex-auto md:ml-4 min-w-44">
+                        <!--<mat-label *ngIf="first">Vencimiento</mat-label>-->
+                        <input
+                            matInput
+                            [matDatepicker]="expirationDatepicker"
+                            [formControl]="details.get('fecha_vencimiento')"
+                            [placeholder]="'Fecha vencimiento de la Entrada'"
+                            matTooltip="Fecha vencimiento de la Entrada">
+                        <mat-datepicker-toggle
+                            matSuffix
+                            [for]="expirationDatepicker">
+                        </mat-datepicker-toggle>
+                        <mat-datepicker #expirationDatepicker></mat-datepicker>
+                    </mat-form-field>
+                    <!-- Amount -->
+                    <mat-form-field class="fuse-mat-no-subscript flex-auto md:ml-4 min-w-44">
+                        <!--<mat-label *ngIf="first">Cantidad</mat-label>-->
+                        <input
+                            matInput
+                            type="number"
+                            maxlength="2"
+                            [formControl]="details.get('cantidad')"
+                            [placeholder]="'Cantidad Recepcionada'"
+                            matTooltip="Cantidad Recepcionada"
+                            bobyNumbersOnly>
+                    </mat-form-field>
+
+                    <!-- Inspection -->
+                    <mat-form-field class="fuse-mat-no-subscript flex-auto md:ml-4 min-w-44">
+                        <input
+                            matInput
+                            [matDatepicker]="inspectionDatepicker"
+                            [formControl]="details.get('fecha_inspeccion')"
+                            [placeholder]="'Fecha Inspección de la Entrada'"
+                            matTooltip="Fecha Inspección de la Entrada">
+                        <mat-datepicker-toggle
+                            matSuffix
+                            [for]="inspectionDatepicker">
+                        </mat-datepicker-toggle>
+                        <mat-datepicker #inspectionDatepicker></mat-datepicker>
+                    </mat-form-field>
+                </div>
+                <!-- Remove details -->
+                <ng-container *ngIf="!(first && last)">
+                    <div
+                        class="flex items-center w-10 pl-2"
+                        [ngClass]="{'mt-6': first}">
+                        <button
+                            class="w-8 h-8 min-h-8"
+                            mat-icon-button
+                            (click)="removeDetailField(i)"
+                            matTooltip="Eliminar">
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_solid:trash'"></mat-icon>
+                        </button>
+                    </div>
+                </ng-container>
+            </div>
+        </ng-container>
+
+        <div
+            class="group inline-flex items-center mt-2 -ml-4 py-2 px-4 rounded cursor-pointer"
+            (click)="addDetailField()">
+            <mat-icon
+                class="icon-size-5"
+                [svgIcon]="'heroicons_solid:plus-circle'"></mat-icon>
+            <span class="ml-2 font-medium text-secondary group-hover:underline">Añadir Detalle</span>
+        </div>
+    </div>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <!-- Cancel -->
+    <button
+        class="ml-auto rounded-lg"
+        mat-button
+        [matTooltip]="'Cancelar'"
+        (click)="Close()">
+        Cancelar
+    </button>
+    <!-- Save -->
+    <button
+        class="ml-2 rounded-lg"
+        mat-flat-button
+        [color]="'primary'"
+        [disabled]="ControlForm.invalid || total_detail < row.cantidad_recepcionada"
+        [matTooltip]="'Guardar'"
+        (click)="saveDetails()">
+        Guardar
+    </button>
+</mat-dialog-actions>

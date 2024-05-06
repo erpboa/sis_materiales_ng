@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, HostListener} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
@@ -10,6 +10,10 @@ import { RouterOutlet } from '@angular/router';
 })
 export class AppComponent
 {
+    /*@HostListener('window:beforeunload', [ '$event' ])
+    beforeUnloadHandler(event) {
+        localStorage.removeItem('aut');
+    }*/
     /**
      * Constructor
      */

@@ -41,10 +41,10 @@ export class SisMaterialesNgService {
         this.$emitter.emit();
     }
 
-    listIncoming(start, limit, sort, dir, query,status): Observable<any>{
+    listIncoming(start,limit,sort,dir,query,status,exchange): Observable<any>{
         //URL sistema/control/metodo
         return from(this.erpService.post('gestion_materiales/ItemsRecepcion/getItemRecepcion',{
-            start,limit,sort, dir, query,status,
+            start,limit,sort, dir, query,status,exchange,
             par_filtro:'ent.nro_guia#ent.nro_lote#ent.serial_registrado#ent.motivo_rechazo#ent.tipo#ent.nro_po#ent.nro_tramite#ent.nro_parte_cot#ent.nro_parte_alterno_cot#ent.descripcion_cot'
         })).pipe(
             switchMap((list: any) => {
@@ -58,9 +58,9 @@ export class SisMaterialesNgService {
         );
     }
 
-    agree(id_recepcion,serial_registrado,nro_lote,fecha_vencimiento):Observable<any>{
+    agree(id_recepcion,serial_registrado,nro_lote,fecha_vencimiento,fecha_inspeccion):Observable<any>{
         return from(this.erpService.post('gestion_materiales/ItemsRecepcion/agreeIncoming',{
-            id_recepcion,serial_registrado,nro_lote,fecha_vencimiento
+            id_recepcion,serial_registrado,nro_lote,fecha_vencimiento,fecha_inspeccion
         })).pipe(
             switchMap((response: any) => {
                 return of(response);
@@ -130,11 +130,11 @@ export class SisMaterialesNgService {
         );
     }
 
-    printIncoming(id_recepcion,tipo,cantidad_recepcionada,size): Observable<any>{
+    printIncoming(id_recepcion,tipo,cantidad_recepcionada,size,exchange): Observable<any>{
         if ( cantidad_recepcionada == 0 ){
             if ( size == 'small' ) {
                 return from(this.erpService.post('gestion_materiales/ItemsRecepcion/ImprimirEtiqueta', {
-                    id_recepcion, tipo
+                    id_recepcion,tipo,cantidad_recepcionada:1,exchange
                 })).pipe(
                     switchMap((response: any) => {
                         return of(response.datos.html);
@@ -146,7 +146,7 @@ export class SisMaterialesNgService {
                 );
             }else{
                 return from(this.erpService.post('gestion_materiales/ItemsRecepcion/ImprimirEtiqueta', {
-                    id_recepcion, tipo
+                    id_recepcion,tipo,cantidad_recepcionada:1,exchange
                 })).pipe(
                     switchMap((response: any) => {
                         return of(response.datos.html);
@@ -160,7 +160,7 @@ export class SisMaterialesNgService {
         }else {
             if ( size == 'small' ) {
                 return from(this.erpService.post('gestion_materiales/ItemsRecepcion/ImprimirEtiqueta', {
-                    id_recepcion, tipo, cantidad_recepcionada
+                    id_recepcion,tipo,cantidad_recepcionada, exchange
                 })).pipe(
                     switchMap((response: any) => {
                         return of(response.datos.html);
@@ -172,7 +172,7 @@ export class SisMaterialesNgService {
                 );
             }else {
                 return from(this.erpService.post('gestion_materiales/ItemsRecepcion/ImprimirEtiqueta', {
-                    id_recepcion, tipo, cantidad_recepcionada
+                    id_recepcion,tipo,cantidad_recepcionada,exchange
                 })).pipe(
                     switchMap((response: any) => {
                         return of(response.datos.html);
@@ -212,6 +212,66 @@ export class SisMaterialesNgService {
             }),
             catchError( error =>{
                 console.error('decline error',error);
+                return of(error);
+            })
+        );
+    }
+
+    /**
+     * Save generate lottery
+     */
+    saveDetails(id_recepcion,details): Observable<any>{
+
+        return from(this.erpService.post(
+            'gestion_materiales/ItemsRecepcion/saveDetails',
+            {id_recepcion,details}
+        )).pipe(
+            switchMap((response: any) => {
+                return of(response);
+            }),
+            catchError((error)=>{
+                return of(error);
+            })
+        );
+    }
+
+    updateAgree(row):Observable<any>{
+        return from(this.erpService.post('gestion_materiales/ItemsRecepcion/updateAgree',{
+            detail: JSON.stringify(row)
+        })).pipe(
+            switchMap((response: any) => {
+                return of(response);
+            }),
+            catchError( error =>{
+                console.error('agree error',error);
+                return of(error);
+            })
+        );
+    }
+
+    addDetail(id_recepcion):Observable<any> {
+        return from(this.erpService.post('gestion_materiales/ItemsRecepcion/addDetail',{
+            id_recepcion
+        })).pipe(
+            switchMap((response: any) => {
+                return of(response.data);
+            }),
+            catchError( error =>{
+                console.error('agree error',error);
+                return of(error);
+            })
+        );
+    }
+
+    removeDetail(id_recepcion_detalle):Observable<any>{
+        return from(this.erpService.post('gestion_materiales/ItemsRecepcion/removeDetail',{
+            id_recepcion_detalle
+        })).pipe(
+            switchMap((response: any) => {
+                return of(response);
+            }),
+            catchError( error =>{
+                console.error('agree error',error);
                 return of(error);
             })
         );

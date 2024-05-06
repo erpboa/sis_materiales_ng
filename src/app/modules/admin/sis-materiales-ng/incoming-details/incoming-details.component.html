@@ -18,7 +18,7 @@
             </div>
         </div>
 
-        <!-- Contact -->
+        <!-- Incoming -->
         <div class="relative flex flex-col flex-auto items-center p-6 pt-0 sm:p-12 sm:pt-0">
             <div class="w-full max-w-3xl">
 
@@ -41,28 +41,39 @@
                     <!-- Actions -->
                     <div class="flex items-center ml-auto mb-1">
                         <button class="mr-2"
-                                *ngIf="incoming.estado == 'aprobado' && incoming.tipo !== 'Herramientas'"
+                                *ngIf="(incoming.estado == 'aprobado' && incoming.tipo !== 'Herramientas') || (incoming.estado == 'incoming' && incoming.exchange =='detalle' && ['Consumibles','Rotables'].includes(incoming.tipo))"
                                 (click)="execute('print_single',incoming,'small')">
                             <mat-icon [matTooltip]="'Imprimir Etiqueta'" class="icon-size-7 text-amber-500 dark:text-amber-400 hover:text-amber-700" svgIcon="heroicons_outline:printer"></mat-icon>
                         </button>
 
                         <button class="ml-2"
-                                *ngIf="incoming.estado == 'aprobado' && incoming.cantidad_recepcionada > 1 && incoming.tipo !== 'Herramientas'"
-                                (click)="execute('print_block', incoming,'large')">
+                                *ngIf="(incoming.estado == 'aprobado' && incoming.cantidad_recepcionada > 1 && incoming.tipo !== 'Herramientas')  || (incoming.estado == 'incoming' && incoming.exchange =='detalle' && ['Consumibles','Rotables'].includes(incoming.tipo))"
+                                (click)="onEventClick($event)">
                             <mat-icon [matTooltip]="'Imprimir Etiquetas'" class="icon-size-7 text-primary-500 dark:text-primary-400 hover:text-primary-700" svgIcon="heroicons_outline:printer"></mat-icon>
                         </button>
 
-                        <button *ngIf="incoming.estado == 'incoming'" (click)="execute('agree',incoming,'')" class="mx-2">
+                        <button *ngIf="incoming.estado == 'incoming' && incoming.tipo_entrada == '' && incoming.exchange == 'maestro'" (click)="execute('agree',incoming,'')" class="mx-2">
                             <mat-icon [matTooltip]="'Aceptar Entrada'" class="icon-size-7 text-green-500 dark:text-green-400 hover:text-green-700" svgIcon="mat_outline:check_circle"></mat-icon>
                         </button>
-                        <button *ngIf="incoming.estado == 'incoming'" (click)="execute('decline',incoming,'')" class="ml-2">
+                        <button *ngIf="incoming.estado == 'incoming' && incoming.exchange == 'maestro'" (click)="execute('decline',incoming,'')" class="ml-2">
                             <mat-icon [matTooltip]="'Rechazar Entrada'" class="icon-size-7 text-red-500 dark:text-red-400  hover:text-red-700" svgIcon="heroicons_outline:x-circle"></mat-icon>
+                        </button>
+                        <button *ngIf="incoming.estado == 'incoming' && incoming.exchange == 'maestro'" (click)="execute('without_form',incoming, '')" class="ml-2">
+                            <mat-icon [matTooltip]="'Aceptar Entrada Sin Formulario'" class="icon-size-7 text-amber-500 dark:text-amber-400  hover:text-amber-700" svgIcon="heroicons_outline:document-check"></mat-icon>
+                        </button>
+
+                        <button *ngIf="incoming.exchange == 'maestro' && incoming.tipo_entrada !== ''" (click)="execute('upload_detail',incoming, '')" class="ml-2">
+                            <mat-icon [matTooltip]="'Cargar Detalle'" class="icon-size-7 text-blue-500 dark:text-blue-400  hover:text-blue-700" svgIcon="mat_outline:upload_file"></mat-icon>
                         </button>
 
                         <button *ngIf="incoming.estado === 'aprobado' && incoming.control_fecha === this.current_date"
                                 class="ml-2"
                                 (click)="rectify(incoming)">
                             <mat-icon [matTooltip]="'Rectificar Entrada'" class="icon-size-7 text-green-500 dark:text-green-400 hover:text-green-700" svgIcon="mat_outline:recycling"></mat-icon>
+                        </button>
+
+                        <button class="ml-2" *ngIf="['incoming','aprobado'].includes(incoming.estado) && incoming.exchange == 'maestro'" (click)="['incoming','aprobado'].includes(incoming.estado) && toggleEditMode(true)">
+                            <mat-icon [matTooltip]="'Editar Entrada'" class="icon-size-7 text-primary-500 dark:text-primary-400 hover:text-primary-700" svgIcon="heroicons_solid:pencil-square"></mat-icon>
                         </button>
                     </div>
                 </div>
@@ -71,7 +82,7 @@
                 <div class="mt-3 text-4xl font-bold truncate">P/N: {{incoming.nro_parte_cot}}</div>
                 <div class="mt-3 text-lg font-bold truncate">DESC: {{incoming.descripcion_cot}}</div>
 
-                <div class="flex flex-col mt-4 pt-6 border-t space-y-8">
+                <div *ngIf="!editMode" class="flex flex-col mt-4 pt-6 border-t space-y-8">
 
                     <div class="leading-6 font-bold " [matTooltip]="'Descripción de los campos de la entrada.'">DETALLE ENTRADA</div>
                     <!-- Fields -->
@@ -420,9 +431,168 @@
                             </div>
                         </ng-container>
                     </ng-container>
-
                 </div>
 
+                <ng-container *ngIf="editMode">
+                    <!-- File Manager form -->
+                    <div class="relative flex flex-col flex-auto items-center mt-8">
+                        <div class="w-full max-w-3xl">
+                            <form [formGroup]="detailsForm">
+
+                                <!-- Nro. Serial -->
+                                <mat-form-field *ngIf="['aprobado'].includes(incoming.estado)" class="boby-mat-no-subscript w-full">
+                                    <mat-label>Nro. Serial</mat-label>
+                                    <mat-icon
+                                        matPrefix
+                                        class="hidden sm:flex icon-size-5"
+                                        [svgIcon]="'heroicons_solid:hashtag'"></mat-icon>
+                                    <input
+                                        matInput
+                                        [formControlName]="'serial_registrado'"
+                                        [placeholder]="'Numero de Serial'"
+                                        [spellcheck]="false">
+                                </mat-form-field>
+
+                                <mat-form-field *ngIf="['aprobado'].includes(incoming.estado)" class="boby-mat-no-subscript w-full">
+                                    <mat-label>Nro. Lote</mat-label>
+                                    <mat-icon
+                                        matPrefix
+                                        class="hidden sm:flex icon-size-5"
+                                        [svgIcon]="'heroicons_solid:hashtag'"></mat-icon>
+                                    <input
+                                        matInput
+                                        [formControlName]="'nro_lote'"
+                                        [placeholder]="'Numero de Lote'"
+                                        [spellcheck]="false">
+                                </mat-form-field>
+
+                                <!-- Expiration -->
+                                <mat-form-field *ngIf="['aprobado'].includes(incoming.estado)" class="w-full">
+                                    <mat-label>Fecha Vencimiento</mat-label>
+                                    <mat-icon
+                                        matPrefix
+                                        class="hidden sm:flex icon-size-5"
+                                        [svgIcon]="'heroicons_solid:calendar-days'"></mat-icon>
+                                    <input
+                                        matInput
+                                        [matDatepicker]="expirationDatepicker"
+                                        [formControlName]="'fecha_vencimiento'"
+                                        [placeholder]="'Fecha vencimiento de la Entrada'">
+                                    <mat-datepicker-toggle
+                                        matSuffix
+                                        [for]="expirationDatepicker">
+                                    </mat-datepicker-toggle>
+                                    <mat-datepicker #expirationDatepicker></mat-datepicker>
+                                </mat-form-field>
+
+                                <!-- Inspection -->
+                                <mat-form-field *ngIf="['aprobado'].includes(incoming.estado)" class="w-full mt-4">
+                                    <mat-label>Fecha Inspección</mat-label>
+                                    <mat-icon
+                                        matPrefix
+                                        class="hidden sm:flex icon-size-5"
+                                        [svgIcon]="'heroicons_solid:calendar-days'"></mat-icon>
+                                    <input
+                                        matInput
+                                        [matDatepicker]="inspectionDatepicker"
+                                        [formControlName]="'fecha_inspeccion'"
+                                        [placeholder]="'Fecha Inspección de la Entrada'">
+                                    <mat-datepicker-toggle
+                                        matSuffix
+                                        [for]="inspectionDatepicker">
+                                    </mat-datepicker-toggle>
+                                    <mat-datepicker #inspectionDatepicker></mat-datepicker>
+                                </mat-form-field>
+
+                                <mat-form-field *ngIf="['incoming','aprobado'].includes(incoming.estado) && incoming.exchange == 'maestro'" class="w-full fuse-mat-dense flex-auto" appearance="fill">
+                                    <mat-label>Tipo Entrada</mat-label>
+                                    <mat-icon
+                                        matPrefix
+                                        class="hidden sm:flex icon-size-5"
+                                        [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+                                    <mat-select [placeholder]="'Seleccione tipo Entrada ...'"
+                                                [formControlName]="'tipo_entrada'"
+                                                [compareWith]="displayType">
+                                        <mat-option *ngFor="let type of listType" [value]="type.title">
+                                            {{type.title}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+
+                                <!-- Actions -->
+                                <div class="flex items-center mt-10 py-4 px-4 border-t bg-gray-50 dark:bg-transparent">
+                                    <!-- Cancel -->
+                                    <button
+                                        class="ml-auto"
+                                        mat-button
+                                        [matTooltip]="'Cancelar'"
+                                        (click)="toggleEditMode(false)">
+                                        Cancelar
+                                    </button>
+                                    <!-- Save -->
+                                    <button
+                                        class="ml-2"
+                                        mat-flat-button
+                                        [color]="'primary'"
+                                        [disabled]="detailsForm.invalid"
+                                        [matTooltip]="'Guardar'"
+                                        (click)="updateAgree(incoming)">
+                                        Guardar
+                                    </button>
+                                </div>
+
+                            </form>
+
+                        </div>
+                    </div>
+                </ng-container>
+
+                <ng-template #eventPanel>
+                    <div class="flex flex-col py-4 px-6 w-full max-w-160 space-y-1.5 border text-md rounded shadow-md overflow-auto bg-card">
+
+                        <!-- Date -->
+                        <div class="flex mt-6">
+                            <mat-icon [svgIcon]="'heroicons_outline:calendar'"></mat-icon>
+                            <div class="flex flex-auto items-center ml-6">
+                                <div class="leading-none">{{current_date | date:'dd/MM/yyyy'}}</div>
+                            </div>
+                        </div>
+
+                        <div class="m-4">
+                            <!-- Title -->
+                            <div>
+                                <input
+                                    matInput
+                                    #quantity
+                                    class="w-full p-2 text-2xl"
+                                    [placeholder]="'Cantidad'"
+                                    bobyNumbersOnly
+                                    maxlength="3" value="{{incoming.cantidad_recepcionada}}">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between mt-4">
+                            <div class="flex items-center space-x-2">
+
+                                <!-- Close -->
+                                <button
+                                    mat-flat-button
+                                    (click)="_closeEventPanel()">
+                                    Cancelar
+                                </button>
+
+                                <!-- Save -->
+                                <button
+                                    mat-flat-button
+                                    [color]="'primary'"
+                                    [disabled]="quantity.value == ''"
+                                    (click)="execute('print_block', incoming, 'large')">
+                                    Imprimir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </ng-template>
             </div>
         </div>
     </ng-container>

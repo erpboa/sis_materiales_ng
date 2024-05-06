@@ -24,7 +24,7 @@ import {MatButtonModule} from "@angular/material/button";
 import {MatLuxonDateModule} from "@angular/material-luxon-adapter";
 import {NgIf} from "@angular/common";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
-
+import * as moment from 'moment';
 @Component({
     selector: 'erp-agree-dialog',
     standalone: true,
@@ -63,11 +63,13 @@ export class AgreeDialogComponent {
             this.agreeForm = this._formBuilder.group({
                 nro_lote            : ['', [Validators.required]],
                 fecha_vencimiento   : ['', [Validators.required]],
+                fecha_inspeccion   : [moment().format("YYYY-MM-DD")],
             });
         }else if ( this._data.type === 'Rotables' ){
             this.agreeForm = this._formBuilder.group({
                 serial_registrado   : ['', [Validators.required]],
                 fecha_vencimiento   : ['', [Validators.required]],
+                fecha_inspeccion   : [moment().format("YYYY-MM-DD")],
             });
         }
 
@@ -85,14 +87,14 @@ export class AgreeDialogComponent {
         const agree = this.agreeForm.getRawValue();
         this.processing = true;
         if ( this._data.type === 'Consumibles' ) {
-            this._toolService.agree(this._data.id, '', agree.nro_lote, agree.fecha_vencimiento).subscribe(
+            this._toolService.agree(this._data.id, '', agree.nro_lote, agree.fecha_vencimiento,agree.fecha_inspeccion).subscribe(
                 (response) => {
                     this.processing = false;
                     this._matDialogRef.close();
                 }
             );
         }else if ( this._data.type === 'Rotables' ){
-            this._toolService.agree(this._data.id, agree.serial_registrado, '', agree.fecha_vencimiento).subscribe(
+            this._toolService.agree(this._data.id, agree.serial_registrado, '', agree.fecha_vencimiento,agree.fecha_inspeccion).subscribe(
                 (response) => {
                     this.processing = false;
                     this._matDialogRef.close();
